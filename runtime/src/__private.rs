@@ -1,6 +1,6 @@
 //! # DO NOT USE THIS MODULE!
 //!
-//! This module contains functions for use in the expanded macros produced by rust-sitter.
+//! This module contains functions for use in the expanded macros produced by ritter.
 //! They need to be public so they can be accessed at all (\*cough\* macro hygiene), but
 //! they are not intended to actually be called in any other circumstance.
 
@@ -140,7 +140,7 @@ pub fn parse<T: crate::Language>(
 ) -> crate::ParseResult<T> {
     let mut parser = tree_sitter::Parser::new();
     parser.set_language(&language()).unwrap();
-    if matches!(std::env::var("RUST_SITTER_PARSER_LOG").as_deref(), Ok("1")) {
+    if matches!(std::env::var("ritter_PARSER_LOG").as_deref(), Ok("1")) {
         parser.set_logger(Some(Box::new(|_t, m| log::debug!("parser::{m}"))));
     }
     let tree = parser.parse(input, None).expect("Failed to parse");

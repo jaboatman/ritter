@@ -1,0 +1,83 @@
+---
+source: macro/src/lib.rs
+expression: "rustfmt_code(&expand_grammar(parse_quote!\n{\n    mod grammar\n    {\n        use ritter::Rule; #[derive(Rule)] #[language] pub enum Expression\n        { Number(#[leaf(re(r\"\\d+\"))] i32), }\n    }\n}).to_token_stream().to_string())"
+---
+mod grammar {
+    use ritter::Rule;
+    impl ::ritter::rule::Language for Expression {
+        fn produce_grammar() -> String {
+            String::new()
+        }
+        fn language() -> ::ritter::tree_sitter::Language {
+            unsafe extern "C" {
+                fn tree_sitter_Expression() -> ::ritter::tree_sitter::Language;
+            }
+            unsafe { tree_sitter_Expression() }
+        }
+        #[doc = r" Parse an input string according to the grammar. Returns either any parsing errors that happened, or a"]
+        #[doc = "[`Expression`]"]
+        #[doc = r" instance containing the parsed structured data."]
+        fn parse(input: &str) -> ::ritter::ParseResult<Self> {
+            ::ritter::__private::parse(input, Self::language)
+        }
+    }
+    impl ::ritter::Extract for Expression {
+        type Output = Self;
+        type LeafFn = ();
+        #[allow(non_snake_case)]
+        fn extract<'tree>(
+            ctx: &mut ::ritter::extract::ExtractContext,
+            node: Option<::ritter::tree_sitter::Node<'tree>>,
+            source: &[u8],
+            _l: Self::LeafFn,
+        ) -> Result<Self, ::ritter::extract::ExtractError<'tree>> {
+            let node = node.ok_or_else(|| ::ritter::error::ExtractError::missing_node(ctx))?;
+            let mut cursor = node.walk();
+            if !cursor.goto_first_child() {
+                return Err(::ritter::error::ExtractError::missing_node(ctx));
+            }
+            loop {
+                let node = cursor.node();
+                match node.kind() {
+                    "Expression_Number" => {
+                        return ::ritter::__private::extract_struct_or_variant(
+                            stringify!(Expression::Number),
+                            node,
+                            move |state| {
+                                Ok(Expression::Number(::ritter::__private::extract_field::<
+                                    i32,
+                                    _,
+                                >(
+                                    ::ritter::extract::BaseExtractor::default(),
+                                    (),
+                                    state,
+                                    ::ritter::extract::ExtractFieldContext::new(
+                                        0u32,
+                                        false,
+                                        |state| match state {
+                                            0u32 => ::ritter::extract::ExtractFieldState::Complete,
+                                            _ => ::ritter::extract::ExtractFieldState::Overflow,
+                                        },
+                                    ),
+                                    source,
+                                    "0",
+                                )?))
+                            },
+                        )
+                    }
+                    k => {
+                        if !cursor.goto_next_sibling() {
+                            return Err(::ritter::error::ExtractError::missing_enum(ctx));
+                        }
+                    }
+                }
+            }
+        }
+    }
+    impl ::ritter::rule::Rule for Expression {
+        const RULE_NAME: &'static str = "Expression";
+        fn produce_ast() -> String {
+            String::new()
+        }
+    }
+}

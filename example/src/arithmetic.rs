@@ -1,5 +1,5 @@
 pub mod grammar {
-    use rust_sitter::Rule;
+    use ritter::Rule;
     #[derive(PartialEq, Eq, Debug, Rule)]
     #[language]
     #[extras(
@@ -110,7 +110,7 @@ pub mod grammar {
 mod tests {
     use super::*;
     use grammar::Expression;
-    use rust_sitter::Language;
+    use ritter::Language;
 
     #[wasm_bindgen_test::wasm_bindgen_test]
     #[test]

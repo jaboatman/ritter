@@ -1,0 +1,146 @@
+---
+source: macro/src/lib.rs
+expression: "rustfmt_code(&expand_grammar(parse_quote!\n{\n    mod grammar\n    {\n        use ritter::{Rule, Spanned}; #[derive(Rule)] #[language] pub struct\n        NumberList { numbers: Vec<Spanned<Number>>, } #[derive(Rule)] pub\n        struct Number { #[leaf(re(r\"\\d+\"))] v: i32 } #[derive(Rule)] #[extra]\n        struct Whitespace { #[leaf(pattern(r\"\\s\"))] _whitespace: (), }\n    }\n}).to_token_stream().to_string())"
+---
+mod grammar {
+    use ritter::{Rule, Spanned};
+    impl ::ritter::rule::Language for NumberList {
+        fn produce_grammar() -> String {
+            String::new()
+        }
+        fn language() -> ::ritter::tree_sitter::Language {
+            unsafe extern "C" {
+                fn tree_sitter_NumberList() -> ::ritter::tree_sitter::Language;
+            }
+            unsafe { tree_sitter_NumberList() }
+        }
+        #[doc = r" Parse an input string according to the grammar. Returns either any parsing errors that happened, or a"]
+        #[doc = "[`NumberList`]"]
+        #[doc = r" instance containing the parsed structured data."]
+        fn parse(input: &str) -> ::ritter::ParseResult<Self> {
+            ::ritter::__private::parse(input, Self::language)
+        }
+    }
+    impl ::ritter::Extract for NumberList {
+        type Output = Self;
+        type LeafFn = ();
+        #[allow(non_snake_case)]
+        fn extract<'tree>(
+            ctx: &mut ::ritter::extract::ExtractContext,
+            node: Option<::ritter::tree_sitter::Node<'tree>>,
+            source: &[u8],
+            _l: Self::LeafFn,
+        ) -> Result<Self, ::ritter::extract::ExtractError<'tree>> {
+            let node = node.ok_or_else(|| ::ritter::error::ExtractError::missing_node(ctx))?;
+            ::ritter::__private::extract_struct_or_variant(
+                stringify!(NumberList),
+                node,
+                move |state| {
+                    Ok(NumberList {
+                        numbers: ::ritter::__private::extract_field::<Vec<Spanned<Number>>, _>(
+                            ::ritter::extract::BaseExtractor::default(),
+                            (),
+                            state,
+                            ::ritter::extract::ExtractFieldContext::new(2u32, true, |state| {
+                                match state {
+                                    0u32 => ::ritter::extract::ExtractFieldState::Str(
+                                        "Number", true, false,
+                                    ),
+                                    1u32 => ::ritter::extract::ExtractFieldState::Repeat1,
+                                    2u32 => ::ritter::extract::ExtractFieldState::Complete,
+                                    _ => ::ritter::extract::ExtractFieldState::Overflow,
+                                }
+                            }),
+                            source,
+                            "numbers",
+                        )?,
+                    })
+                },
+            )
+        }
+    }
+    impl ::ritter::rule::Rule for NumberList {
+        const RULE_NAME: &'static str = "NumberList";
+        fn produce_ast() -> String {
+            String::new()
+        }
+    }
+    impl ::ritter::Extract for Number {
+        type Output = Self;
+        type LeafFn = ();
+        #[allow(non_snake_case)]
+        fn extract<'tree>(
+            ctx: &mut ::ritter::extract::ExtractContext,
+            node: Option<::ritter::tree_sitter::Node<'tree>>,
+            source: &[u8],
+            _l: Self::LeafFn,
+        ) -> Result<Self, ::ritter::extract::ExtractError<'tree>> {
+            let node = node.ok_or_else(|| ::ritter::error::ExtractError::missing_node(ctx))?;
+            ::ritter::__private::extract_struct_or_variant(stringify!(Number), node, move |state| {
+                Ok(Number {
+                    v: ::ritter::__private::extract_field::<i32, _>(
+                        ::ritter::extract::BaseExtractor::default(),
+                        (),
+                        state,
+                        ::ritter::extract::ExtractFieldContext::new(
+                            0u32,
+                            false,
+                            |state| match state {
+                                0u32 => ::ritter::extract::ExtractFieldState::Complete,
+                                _ => ::ritter::extract::ExtractFieldState::Overflow,
+                            },
+                        ),
+                        source,
+                        "v",
+                    )?,
+                })
+            })
+        }
+    }
+    impl ::ritter::rule::Rule for Number {
+        const RULE_NAME: &'static str = "Number";
+        fn produce_ast() -> String {
+            String::new()
+        }
+    }
+    impl ::ritter::Extract for Whitespace {
+        type Output = Self;
+        type LeafFn = ();
+        #[allow(non_snake_case)]
+        fn extract<'tree>(
+            ctx: &mut ::ritter::extract::ExtractContext,
+            node: Option<::ritter::tree_sitter::Node<'tree>>,
+            source: &[u8],
+            _l: Self::LeafFn,
+        ) -> Result<Self, ::ritter::extract::ExtractError<'tree>> {
+            let node = node.ok_or_else(|| ::ritter::error::ExtractError::missing_node(ctx))?;
+            ::ritter::__private::extract_struct_or_variant(
+                stringify!(Whitespace),
+                node,
+                move |state| {
+                    Ok(Whitespace {
+                        _whitespace: ::ritter::__private::extract_field::<(), _>(
+                            ::ritter::extract::BaseExtractor::default(),
+                            (),
+                            state,
+                            ::ritter::extract::ExtractFieldContext::new(0u32, false, |state| {
+                                match state {
+                                    0u32 => ::ritter::extract::ExtractFieldState::Complete,
+                                    _ => ::ritter::extract::ExtractFieldState::Overflow,
+                                }
+                            }),
+                            source,
+                            "_whitespace",
+                        )?,
+                    })
+                },
+            )
+        }
+    }
+    impl ::ritter::rule::Rule for Whitespace {
+        const RULE_NAME: &'static str = "Whitespace";
+        fn produce_ast() -> String {
+            String::new()
+        }
+    }
+}

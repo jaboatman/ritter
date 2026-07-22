@@ -1,0 +1,129 @@
+---
+source: macro/src/lib.rs
+expression: "rustfmt_code(&expand_grammar(parse_quote!\n{\n    mod grammar\n    {\n        #[derive(ritter::Rule)] #[language] pub enum Expr\n        {\n            Number(#[leaf(pattern(r\"\\d+\"))] u32), Neg\n            { #[leaf(\"!\")] _bang: (), value: Box<Expr>, }\n        }\n    }\n}).to_token_stream().to_string())"
+---
+mod grammar {
+    impl ::ritter::rule::Language for Expr {
+        fn produce_grammar() -> String {
+            String::new()
+        }
+        fn language() -> ::ritter::tree_sitter::Language {
+            unsafe extern "C" {
+                fn tree_sitter_Expr() -> ::ritter::tree_sitter::Language;
+            }
+            unsafe { tree_sitter_Expr() }
+        }
+        #[doc = r" Parse an input string according to the grammar. Returns either any parsing errors that happened, or a"]
+        #[doc = "[`Expr`]"]
+        #[doc = r" instance containing the parsed structured data."]
+        fn parse(input: &str) -> ::ritter::ParseResult<Self> {
+            ::ritter::__private::parse(input, Self::language)
+        }
+    }
+    impl ::ritter::Extract for Expr {
+        type Output = Self;
+        type LeafFn = ();
+        #[allow(non_snake_case)]
+        fn extract<'tree>(
+            ctx: &mut ::ritter::extract::ExtractContext,
+            node: Option<::ritter::tree_sitter::Node<'tree>>,
+            source: &[u8],
+            _l: Self::LeafFn,
+        ) -> Result<Self, ::ritter::extract::ExtractError<'tree>> {
+            let node = node.ok_or_else(|| ::ritter::error::ExtractError::missing_node(ctx))?;
+            let mut cursor = node.walk();
+            if !cursor.goto_first_child() {
+                return Err(::ritter::error::ExtractError::missing_node(ctx));
+            }
+            loop {
+                let node = cursor.node();
+                match node.kind() {
+                    "Expr_Number" => {
+                        return ::ritter::__private::extract_struct_or_variant(
+                            stringify!(Expr::Number),
+                            node,
+                            move |state| {
+                                Ok(Expr::Number(::ritter::__private::extract_field::<u32, _>(
+                                    ::ritter::extract::BaseExtractor::default(),
+                                    (),
+                                    state,
+                                    ::ritter::extract::ExtractFieldContext::new(
+                                        0u32,
+                                        false,
+                                        |state| match state {
+                                            0u32 => ::ritter::extract::ExtractFieldState::Complete,
+                                            _ => ::ritter::extract::ExtractFieldState::Overflow,
+                                        },
+                                    ),
+                                    source,
+                                    "0",
+                                )?))
+                            },
+                        )
+                    }
+                    "Expr_Neg" => {
+                        return ::ritter::__private::extract_struct_or_variant(
+                            stringify!(Expr::Neg),
+                            node,
+                            move |state| {
+                                Ok(Expr::Neg {
+                                    _bang: ::ritter::__private::extract_field::<(), _>(
+                                        ::ritter::extract::BaseExtractor::default(),
+                                        (),
+                                        state,
+                                        ::ritter::extract::ExtractFieldContext::new(
+                                            1u32,
+                                            false,
+                                            |state| match state {
+                                                0u32 => ::ritter::extract::ExtractFieldState::Str(
+                                                    "!", false, false,
+                                                ),
+                                                1u32 => {
+                                                    ::ritter::extract::ExtractFieldState::Complete
+                                                }
+                                                _ => ::ritter::extract::ExtractFieldState::Overflow,
+                                            },
+                                        ),
+                                        source,
+                                        "_bang",
+                                    )?,
+                                    value: ::ritter::__private::extract_field::<Box<Expr>, _>(
+                                        ::ritter::extract::BaseExtractor::default(),
+                                        (),
+                                        state,
+                                        ::ritter::extract::ExtractFieldContext::new(
+                                            1u32,
+                                            false,
+                                            |state| match state {
+                                                0u32 => ::ritter::extract::ExtractFieldState::Str(
+                                                    "Expr", true, false,
+                                                ),
+                                                1u32 => {
+                                                    ::ritter::extract::ExtractFieldState::Complete
+                                                }
+                                                _ => ::ritter::extract::ExtractFieldState::Overflow,
+                                            },
+                                        ),
+                                        source,
+                                        "value",
+                                    )?,
+                                })
+                            },
+                        )
+                    }
+                    k => {
+                        if !cursor.goto_next_sibling() {
+                            return Err(::ritter::error::ExtractError::missing_enum(ctx));
+                        }
+                    }
+                }
+            }
+        }
+    }
+    impl ::ritter::rule::Rule for Expr {
+        const RULE_NAME: &'static str = "Expr";
+        fn produce_ast() -> String {
+            String::new()
+        }
+    }
+}

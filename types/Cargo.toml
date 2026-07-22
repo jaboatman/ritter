@@ -1,5 +1,5 @@
 [package]
-name = "rust-sitter-types"
+name = "ritter-types"
 edition = "2024"
 version.workspace = true
 authors.workspace = true

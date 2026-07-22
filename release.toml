@@ -1,6 +1,6 @@
 pre-release-replacements = [
-  {file="../README.md", search="rust-sitter = .*", replace="rust-sitter = \"{{version}}\""},
-  {file="../README.md", search="rust-sitter-tool = .*", replace="rust-sitter-tool = \"{{version}}\""},
+  {file="../README.md", search="ritter = .*", replace="ritter = \"{{version}}\""},
+  {file="../README.md", search="ritter-tool = .*", replace="ritter-tool = \"{{version}}\""},
 ]
 
 consolidate-commits = true
