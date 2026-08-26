@@ -1,13 +1,12 @@
-# `ritter` - tree-sitter grammar generated for Rust
+# `ritter` - tree-sitter grammars via rust macros
 
-Ritter makes it easy to create efficient parsers in Rust by leveraging the [tree-sitter](https://tree-sitter.github.io/tree-sitter/) parser generator. With `ritter`, you can define your entire grammar with annotations on idiomatic<sup>*</sup> Rust code, and let macros generate the parser and type-safe bindings for you.
+`ritter` makes it easy to create efficient parsers in Rust by leveraging the [tree-sitter](https://tree-sitter.github.io/tree-sitter/) parser generator. With `ritter`, you can define your entire grammar with proc-macro annotations on idiomatic<sup>*</sup> Rust code.
 
 [^*]: Sort of, future plans may improve this.
 
-## Installation
+## Usage
 
-
-First, add `ritter` to your `Cargo.toml`:
+Add `ritter` runtime to your `Cargo.toml` and the build tool as a build dependency:
 ```toml
 [dependencies]
 ritter = "0.1.0-pre.1"
@@ -29,97 +28,7 @@ fn main() {
 ```
 
 ## Defining a Grammar
-Now that we have ritter added to our project, we can define our grammar. ritter grammars are defined in Rust modules. First, we create a module file for the grammar in `src/grammar/mod.rs`. Note, this can be any module, however,
-due to various quirks with the build system it is required that you have one grammar per module, and all types
-in the grammar are defined within it, or a submodule of the module.
-
-Then, inside the module, we can define individual AST nodes. For this simple example, we'll define an expression that can be used in a mathematical expression. Note that we annotate this type as `#[language]` to indicate that it is the root AST type.
-
-```rust
-// in ./src/grammar/mod.rs
-use ritter::Rule;
-#[derive(Rule)]
-#[language]
-pub enum Expr {
-    Number(u32),
-    Add(Box<Expr>, Box<Expr>)
-}
-```
-
-Now that we have the type defined, we must annotate the enum variants to describe how to identify them in the text being parsed. First, we can apply `leaf` to use a regular expression to match digits corresponding to a number.
-The value will try to extract the value using a default extraction for the type. For numeric types, this
-defaults to `FromStr`. You can specify an alternate function using `#[with]`.
-
-```rust
-Number(
-    #[leaf(re(r"\d+"))]
-    u32,
-)
-```
-
-For the `Add` variant, things are a bit more complicated. First, we add an extra field corresponding to the `+` that must sit between the two sub-expressions. This can be achieved with `text` or `leaf`, which instructs the parser to match a specific string.
-
-```rust
-Add(
-    Box<Expr>,
-    #[text("+")] (),
-    Box<Expr>,
-)
-```
-
-If we try to compile this grammar, however, we will see ane error due to conflicting parse trees for expressions like `1 + 2 + 3`, which could be parsed as `(1 + 2) + 3` or `1 + (2 + 3)`. We want the former, so we can add a further annotation specifying that we want left-associativity for this rule.
-
-```rust
-#[prec_left(1)]
-Add(
-    Box<Expr>,
-    #[text("+")] (),
-    Box<Expr>,
-)
-```
-
-All together, our grammar looks like this:
-
-```rust
-use ritter::Rule;
-#[derive(Rule)]
-#[language]
-pub enum Expr {
-    Number(
-        #[leaf(re(r"\d+"))]
-        u32,
-    ),
-    #[prec_left(1)]
-    Add(
-        Box<Expr>,
-        #[text("+")] (),
-        Box<Expr>,
-    )
-}
-```
-
-We can then parse text using this grammar:
-
-```rust
-dbg!(grammar::Expr::parse("1+2+3").into_result());
-/*
-grammar::Expr::parse("1+2+3").into_result() = Ok(Add(
-    Add(
-        Number(
-            1,
-        ),
-        (),
-        Number(
-            2,
-        ),
-    ),
-    (),
-    Number(
-        3,
-    ),
-))
-*/
-```
+See [examples](examples/) for some complete examples of how to define and use a grammar.
 
 ## Type Annotations
 ritter supports a number of annotations that can be applied to type and fields in your grammar. These annotations can be used to control how the parser behaves, and how the resulting AST is constructed.
@@ -157,8 +66,7 @@ The `#[leaf(...)]` annotation can be used to define a leaf node in the AST.
 `#[text(...)]` is similar, but it does not create a named node in the grammar and cannot be
 extracted. It must always be assigned to `()`.
 
-`leaf` and `text` take an input that looks like the [tree sitter
-DSL](https://tree-sitter.github.io/tree-sitter/creating-parsers/2-the-grammar-dsl.html). The supported rules
+`leaf` and `text` take an input that looks like the [tree sitter DSL](https://tree-sitter.github.io/tree-sitter/creating-parsers/2-the-grammar-dsl.html). The supported rules
 currently are:
 * `choice`
 * `optional`
