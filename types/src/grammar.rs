@@ -4,9 +4,6 @@ use std::collections::HashSet;
 use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
 
-// NOTE: This could be useful for generating the grammar in the first place instead of just
-// building json! values directly.
-
 /// Type for the JSON representation of a grammar, mostly copied from `tree_sitter_generate`.
 #[derive(Deserialize, Serialize)]
 pub struct Grammar {

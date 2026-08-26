@@ -1,5 +1,5 @@
 use log::trace;
-use std::{collections::HashSet, ops::Range};
+use std::ops::Range;
 
 use crate::{ExtractContext, Point, Position, extract::ExtractFieldIterator};
 
@@ -139,7 +139,9 @@ impl<'a> NodeError<'a> {
             error_position,
             lookaheads: self.lookahead().map(|l| l.collect()).unwrap_or_default(),
             reason: if self.node.is_missing() {
-                ParseErrorReason::Missing(self.node.kind())
+                ParseErrorReason::Missing(unsafe {
+                    std::mem::transmute::<&str, &'static str>(self.node.kind())
+                })
             } else {
                 ParseErrorReason::Error
             },
@@ -152,7 +154,8 @@ impl<'a> NodeError<'a> {
 
     /// Byte range of the portion of the text which created the error.
     pub fn error_byte_range(&self) -> Range<usize> {
-        self.node.error_byte_range().unwrap()
+        // self.node.error_byte_range().unwrap()
+        self.error_node().byte_range()
     }
 
     pub fn point_range(&self) -> (Point, Point) {
@@ -162,13 +165,14 @@ impl<'a> NodeError<'a> {
     }
 
     pub fn error_point_range(&self) -> (Point, Point) {
-        let start = self.node.error_start_position().unwrap();
-        let end = self.node.error_end_position().unwrap();
+        let node = self.error_node();
+        let start = node.start_position();
+        let end = node.end_position();
         (Point::from_tree_sitter(start), Point::from_tree_sitter(end))
     }
 
     pub fn first_error_point_range(&self) -> (Point, Point) {
-        match self.node.error_child(0) {
+        match self.first_error_child() {
             None => self.error_point_range(),
             Some(c) => {
                 let start = c.start_position();
@@ -178,47 +182,58 @@ impl<'a> NodeError<'a> {
         }
     }
 
+    // TODO: Make sure these are actually tested.
     pub fn first_error_byte_range(&self) -> Range<usize> {
-        match self.node.error_child(0) {
-            None => self.error_byte_range(),
-            Some(c) => c.byte_range(),
-        }
+        self.error_node().byte_range()
     }
 
     pub fn is_missing(&self) -> bool {
         self.node.is_missing()
     }
 
-    pub fn lookahead(
-        &self,
-        // grammar: Option<&'a crate::grammar::Grammar>,
-    ) -> Option<impl Iterator<Item = &'static str>> {
-        let (state, reachable, filter) = if self.node.is_missing() {
+    fn error_node(&self) -> tree_sitter::Node<'a> {
+        self.first_error_child().unwrap_or(self.node)
+    }
+
+    fn first_error_child(&self) -> Option<tree_sitter::Node<'a>> {
+        // Magic incantation: TODO explain. I discovered this empirically as a workaround for
+        // not having the `error_child` API merged upstream. I'm not sure how it works, but it
+        // appears consistent across broader tests than are provided by this repo.
+        // My best explanation: the last state with a valid parse state but no next state is the
+        // one which is used to capture the most relevant error for us - this is the first child of
+        // the internal _ERROR (ts_builtin_sym_error_repeat) node. This will get us closest to the
+        // actual point of syntax error in the produced tree and give us the best lookahead.
+
+        // Original code from a now closed PR to tree-sitter:
+        //     self.node.error_child(0)
+        let mut cursor = self.node.walk();
+        let mut n = None;
+        if cursor.goto_first_child() {
+            loop {
+                let current = cursor.node();
+                if current.parse_state() != 0 && current.next_parse_state() == 0 {
+                    n = Some(current);
+                }
+                if !cursor.goto_next_sibling() {
+                    break;
+                }
+            }
+        }
+        n
+    }
+
+    pub fn lookahead(&self) -> Option<impl Iterator<Item = &'static str>> {
+        let state = if self.node.is_missing() {
             // Handle the lookahead appropriately for missing.
-            let state = self.node.parse_state();
-            (state, None, true)
+            self.node.parse_state()
         } else {
             // Find the endpoint.
-            // let (node, ctx) = match self.node.error_child(0) {
-            //     Some(c) => (c, self.node.child(0).unwrap()),
-            //     None => (self.node, self.node),
-            // };
-            let node = match self.node.error_child(0) {
-                Some(c) => c,
+            let node = match self.first_error_child() {
+                Some(c) => dbg!(c),
                 None => self.node,
             };
 
-            // Find the first context node type and compute reachable set.
-            // let reachable = if let Some(grammar) = grammar {
-            //     dbg!(grammar.reachable_set(dbg!(ctx.kind())))
-            // } else {
-            //     None
-            // };
-            let reachable = None;
-
-            let state = node.parse_state();
-            // NOTE: We may want to always filter these.
-            (state, reachable, false)
+            node.parse_state()
         };
 
         if state == 0 {
@@ -231,49 +246,46 @@ impl<'a> NodeError<'a> {
         Some(ErrorLookahead {
             it,
             language,
-            filter_non_action: filter,
             state,
-            reachable,
         })
     }
 }
 
-struct ErrorLookahead<'a> {
+struct ErrorLookahead {
     it: tree_sitter::LookaheadIterator,
     language: tree_sitter::Language,
-    filter_non_action: bool,
     state: u16,
-    reachable: Option<HashSet<&'a str>>,
 }
 
-impl Iterator for ErrorLookahead<'_> {
+impl Iterator for ErrorLookahead {
     type Item = &'static str;
     fn next(&mut self) -> Option<Self::Item> {
         loop {
-            self.it.next()?;
-            let sym = self.it.current_symbol();
+            let sym = self.it.next()?;
             // skip the end symbol, it isn't useful here.
             if sym == 0 {
                 continue;
             }
-            if self.filter_non_action && !self.it.has_actions() {
-                continue;
-            }
+            // TODO: This was obviously added for a reason that is long gone - see if we can find
+            // out why before we try and get this upstreamed to tree-sitter.
+            // It is possible the PR to fix the optimization which collapses parse states already
+            // fixed this issue too.
+            // if self.filter_non_action && !self.it.has_actions() {
+            //     continue;
+            // }
             // Maybe we want this to be optional as well?
             // Filter out "extra" nodes.
             if self.state == self.language.next_state(self.state, sym) {
                 continue;
             }
 
-            let sym_name = self.it.current_symbol_name();
-
-            if let Some(reachable) = &self.reachable
-                && !reachable.contains(sym_name)
-            {
-                continue;
-            }
-
-            return Some(sym_name);
+            // This was changed by https://github.com/tree-sitter/tree-sitter/commit/081929092f32463fd1f9106ec4f71b0adcb9ff82
+            // to no longer be static, however, the string is always static - it is statically built
+            // into the binary during the code generation phase. So we can safely cast away the
+            // lifetime here.
+            let name = self.it.current_symbol_name()?;
+            let name: &'static str = unsafe { std::mem::transmute(name) };
+            return Some(name);
         }
     }
 }
@@ -324,11 +336,13 @@ impl<'a> ExtractError<'a> {
         }
     }
 
-    pub(crate) fn new_ctx(
-        ctx: &ExtractContext,
-        position: crate::Position,
-        reason: ExtractErrorReason,
-    ) -> Self {
+    pub(crate) fn new_ctx(ctx: &ExtractContext, reason: ExtractErrorReason) -> Self {
+        let position = crate::Position {
+            // TODO: This should be fixed to actually have the full range from the outer node.
+            bytes: ctx.last_idx..ctx.last_idx,
+            start: Point::from_tree_sitter(ctx.last_pt),
+            end: Point::from_tree_sitter(ctx.last_pt),
+        };
         Self::new(ctx.struct_name, ctx.field_name, position, reason)
     }
 
@@ -370,6 +384,16 @@ impl<'a> ExtractError<'a> {
         )
     }
 
+    #[doc(hidden)]
+    pub fn __extract_err(ctx: &ExtractContext, position: crate::Position, message: String) -> Self {
+        Self::new(
+            ctx.struct_name,
+            ctx.field_name,
+            position,
+            ExtractErrorReason::FieldExtraction { message },
+        )
+    }
+
     #[allow(dead_code)]
     pub(crate) fn accumulate_parse_errors(self, errors: &mut Vec<ParseError>) {
         for inner in self.inner {
@@ -388,23 +412,11 @@ impl<'a> ExtractError<'a> {
     }
 
     pub fn missing_node(ctx: &ExtractContext) -> Self {
-        let position = crate::Position {
-            // TODO: This should be fixed to actually have the full range from the outer node.
-            bytes: ctx.last_idx..ctx.last_idx,
-            start: Point::from_tree_sitter(ctx.last_pt),
-            end: Point::from_tree_sitter(ctx.last_pt),
-        };
-        Self::new_ctx(ctx, position, ExtractErrorReason::MissingNode)
+        Self::new_ctx(ctx, ExtractErrorReason::MissingNode)
     }
 
     pub fn missing_enum(ctx: &ExtractContext) -> Self {
-        let position = crate::Position {
-            // TODO: This should be fixed to actually have the full range from the outer node.
-            bytes: ctx.last_idx..ctx.last_idx,
-            start: Point::from_tree_sitter(ctx.last_pt),
-            end: Point::from_tree_sitter(ctx.last_pt),
-        };
-        Self::new_ctx(ctx, position, ExtractErrorReason::MissingEnum)
+        Self::new_ctx(ctx, ExtractErrorReason::MissingEnum)
     }
 
     pub fn position(&self) -> &Position {

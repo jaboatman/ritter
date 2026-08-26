@@ -1,8 +1,8 @@
 [package]
 name = "ritter"
-description = "A package for defining tree-sitter grammars alongside Rust logic"
+description = "A package for defining tree-sitter grammars alongside rust logic"
 readme = "../README.md"
-repository = "https://github.com/otonoma/ritter"
+repository = "https://github.com/jaboatman/ritter"
 version.workspace = true
 authors.workspace = true
 edition = "2024"

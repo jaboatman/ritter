@@ -36,6 +36,7 @@ pub trait Rule: Extract<Output = Self, LeafFn = ()> {
     }
 }
 
+/// `Language` is used to represent the root type in a language.
 pub trait Language: Rule {
     fn produce_grammar() -> String;
 

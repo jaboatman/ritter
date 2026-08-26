@@ -2,7 +2,7 @@
 name = "ritter-tool"
 description = "The external tool for ritter that extracts grammars from Rust definitions"
 readme = "../README.md"
-repository = "https://github.com/otonoma/ritter"
+repository = "https://github.com/jaboatman/ritter"
 version.workspace = true
 authors.workspace = true
 license = "MIT"

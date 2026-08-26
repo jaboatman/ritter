@@ -1,5 +1,5 @@
 // TODO: Switch on which version we are using specifically.
-const GENERATED_SEMANTIC_VERSION: Option<(u8, u8, u8)> = Some((0, 26, 0));
+const GENERATED_SEMANTIC_VERSION: Option<(u8, u8, u8)> = Some((0, 27, 0));
 
 use std::io::Write;
 use std::path::{Path, PathBuf};
@@ -48,18 +48,30 @@ impl ParserBuilder {
     }
 }
 
+fn generate_parser_tree_sitter(
+    grammar_string: &str,
+) -> tree_sitter_generate::GenerateResult<(String, String)> {
+    // TODO: Do something with these diagnostics
+    let mut diagnostics = vec![];
+    generate_parser_for_grammar(
+        grammar_string,
+        GENERATED_SEMANTIC_VERSION,
+        tree_sitter_generate::OptLevel::empty(),
+        &mut diagnostics,
+    )
+}
+
 // TODO: Rewrite this function to support specifying the out dir and target manually, to allow
 // generating the parser to a local folder for easier integration with external text editors.
 fn generate_parser(grammar: &serde_json::Value, out_dir: Option<&Path>) -> Result<(), String> {
     let grammar_string = grammar.to_string();
-    let (grammar_name, grammar_c) =
-        match generate_parser_for_grammar(&grammar_string, GENERATED_SEMANTIC_VERSION) {
-            Ok(o) => o,
-            Err(e) => {
-                // Doing it this way produces a clean error from tree-sitter on failure.
-                return Err(format!("generation error: {e}"));
-            }
-        };
+    let (grammar_name, grammar_c) = match generate_parser_tree_sitter(&grammar_string) {
+        Ok(o) => o,
+        Err(e) => {
+            // Doing it this way produces a clean error from tree-sitter on failure.
+            return Err(format!("generation error: {e}"));
+        }
+    };
     let tempfile = tempfile::Builder::new()
         .prefix("grammar")
         .tempdir()
@@ -120,44 +132,14 @@ fn write_grammar_and_c_to_dir(
         .unwrap();
     drop(parser_file);
 
-    let sysroot_dir = dir.join("sysroot");
-    // if std::env::var("TARGET").unwrap().starts_with("wasm32") {
-    //     std::fs::create_dir(&sysroot_dir).unwrap();
-    //     let mut stdint = std::fs::File::create(sysroot_dir.join("stdint.h")).unwrap();
-    //     stdint
-    //         .write_all(include_bytes!("wasm-sysroot/stdint.h"))
-    //         .unwrap();
-    //     drop(stdint);
-
-    //     let mut stdlib = std::fs::File::create(sysroot_dir.join("stdlib.h")).unwrap();
-    //     stdlib
-    //         .write_all(include_bytes!("wasm-sysroot/stdlib.h"))
-    //         .unwrap();
-    //     drop(stdlib);
-
-    //     let mut stdio = std::fs::File::create(sysroot_dir.join("stdio.h")).unwrap();
-    //     stdio
-    //         .write_all(include_bytes!("wasm-sysroot/stdio.h"))
-    //         .unwrap();
-    //     drop(stdio);
-
-    //     let mut stdbool = std::fs::File::create(sysroot_dir.join("stdbool.h")).unwrap();
-    //     stdbool
-    //         .write_all(include_bytes!("wasm-sysroot/stdbool.h"))
-    //         .unwrap();
-    //     drop(stdbool);
-    // }
-
-    sysroot_dir
+    dir.join("sysroot")
 }
 
 #[cfg(test)]
 mod tests {
     use syn::{ItemMod, parse_quote};
 
-    use super::GENERATED_SEMANTIC_VERSION;
-    // use ritter_common::expansion::generate_grammar;
-    use tree_sitter_generate::generate_parser_for_grammar;
+    use crate::generate_parser_tree_sitter;
     fn generate_grammar(item: ItemMod) -> serde_json::Value {
         let (_, items) = item.content.unwrap();
         serde_json::to_value(
@@ -194,7 +176,7 @@ mod tests {
 
         let grammar = generate_grammar(m);
         insta::assert_snapshot!(grammar);
-        generate_parser_for_grammar(&grammar.to_string(), GENERATED_SEMANTIC_VERSION).unwrap();
+        generate_parser_tree_sitter(&grammar.to_string()).unwrap();
     }
 
     #[test]
@@ -219,7 +201,7 @@ mod tests {
 
         let grammar = generate_grammar(m);
         insta::assert_snapshot!(grammar);
-        generate_parser_for_grammar(&grammar.to_string(), GENERATED_SEMANTIC_VERSION).unwrap();
+        generate_parser_tree_sitter(&grammar.to_string()).unwrap();
     }
 
     #[test]
@@ -248,7 +230,7 @@ mod tests {
 
         let grammar = generate_grammar(m);
         insta::assert_snapshot!(grammar);
-        generate_parser_for_grammar(&grammar.to_string(), GENERATED_SEMANTIC_VERSION).unwrap();
+        generate_parser_tree_sitter(&grammar.to_string()).unwrap();
     }
 
     #[test]
@@ -279,7 +261,7 @@ mod tests {
 
         let grammar = generate_grammar(m);
         insta::assert_snapshot!(grammar);
-        generate_parser_for_grammar(&grammar.to_string(), GENERATED_SEMANTIC_VERSION).unwrap();
+        generate_parser_tree_sitter(&grammar.to_string()).unwrap();
     }
 
     #[test]
@@ -371,7 +353,7 @@ mod tests {
 
         let grammar = generate_grammar(m);
         insta::assert_snapshot!(grammar);
-        generate_parser_for_grammar(&grammar.to_string(), GENERATED_SEMANTIC_VERSION).unwrap();
+        generate_parser_tree_sitter(&grammar.to_string()).unwrap();
     }
 
     #[test]
@@ -398,7 +380,7 @@ mod tests {
 
         let grammar = generate_grammar(m);
         insta::assert_snapshot!(grammar);
-        generate_parser_for_grammar(&grammar.to_string(), GENERATED_SEMANTIC_VERSION).unwrap();
+        generate_parser_tree_sitter(&grammar.to_string()).unwrap();
     }
 
     #[test]
@@ -427,7 +409,7 @@ mod tests {
 
         let grammar = generate_grammar(m);
         insta::assert_snapshot!(grammar);
-        generate_parser_for_grammar(&grammar.to_string(), GENERATED_SEMANTIC_VERSION).unwrap();
+        generate_parser_tree_sitter(&grammar.to_string()).unwrap();
     }
 
     #[test]
@@ -458,7 +440,7 @@ mod tests {
 
         let grammar = generate_grammar(m);
         insta::assert_snapshot!(grammar);
-        generate_parser_for_grammar(&grammar.to_string(), GENERATED_SEMANTIC_VERSION).unwrap();
+        generate_parser_tree_sitter(&grammar.to_string()).unwrap();
     }
 
     #[test]
@@ -488,7 +470,7 @@ mod tests {
 
         let grammar = generate_grammar(m);
         insta::assert_snapshot!(grammar);
-        generate_parser_for_grammar(&grammar.to_string(), GENERATED_SEMANTIC_VERSION).unwrap();
+        generate_parser_tree_sitter(&grammar.to_string()).unwrap();
     }
 
     #[test]
@@ -520,7 +502,7 @@ mod tests {
 
         let grammar = generate_grammar(m);
         insta::assert_snapshot!(grammar);
-        generate_parser_for_grammar(&grammar.to_string(), GENERATED_SEMANTIC_VERSION).unwrap();
+        generate_parser_tree_sitter(&grammar.to_string()).unwrap();
     }
 
     #[test]
@@ -551,7 +533,7 @@ mod tests {
 
         let grammar = generate_grammar(m);
         insta::assert_snapshot!(grammar);
-        generate_parser_for_grammar(&grammar.to_string(), GENERATED_SEMANTIC_VERSION).unwrap();
+        generate_parser_tree_sitter(&grammar.to_string()).unwrap();
     }
 
     #[test]
@@ -581,7 +563,7 @@ mod tests {
 
         let grammar = generate_grammar(m);
         insta::assert_snapshot!(grammar);
-        generate_parser_for_grammar(&grammar.to_string(), GENERATED_SEMANTIC_VERSION).unwrap();
+        generate_parser_tree_sitter(&grammar.to_string()).unwrap();
     }
 
     #[test]
@@ -608,7 +590,7 @@ mod tests {
 
         let grammar = generate_grammar(m);
         insta::assert_snapshot!(grammar);
-        generate_parser_for_grammar(&grammar.to_string(), GENERATED_SEMANTIC_VERSION).unwrap();
+        generate_parser_tree_sitter(&grammar.to_string()).unwrap();
     }
 
     #[test]
@@ -635,6 +617,6 @@ mod tests {
 
         let grammar = generate_grammar(m);
         insta::assert_snapshot!(grammar);
-        generate_parser_for_grammar(&grammar.to_string(), GENERATED_SEMANTIC_VERSION).unwrap();
+        generate_parser_tree_sitter(&grammar.to_string()).unwrap();
     }
 }
