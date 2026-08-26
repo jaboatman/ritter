@@ -1,0 +1,7 @@
+pre-release-replacements = [
+  {file="../README.md", search="rust-sitter = .*", replace="rust-sitter = \"{{version}}\""},
+  {file="../README.md", search="rust-sitter-tool = .*", replace="rust-sitter-tool = \"{{version}}\""},
+]
+
+consolidate-commits = true
+shared-version = true

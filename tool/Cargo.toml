@@ -1,0 +1,35 @@
+[package]
+name = "rust-sitter-tool"
+description = "The external tool for Rust Sitter that extracts grammars from Rust definitions"
+readme = "../README.md"
+repository = "https://github.com/hydro-project/rust-sitter"
+version = "0.4.5"
+authors = ["Shadaj Laddad <shadaj@users.noreply.github.com>"]
+license = "MIT"
+edition = "2021"
+keywords = ["parsing", "codegen"]
+categories = ["development-tools"]
+
+[features]
+default = ["build_parsers"]
+build_parsers = [
+    "dep:tempfile",
+    "dep:tree-sitter",
+    "dep:tree-sitter-generate",
+    "dep:cc",
+]
+
+[dependencies]
+syn = { version = "2", features = ["full", "extra-traits"] }
+syn-inline-mod = "0.6"
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1", features = ["preserve_order"] }
+rust-sitter-common = { version = "0.4.5", path = "../common" }
+
+tempfile = { version = "3", optional = true }
+tree-sitter = { version = "0.25.2", optional = true }
+tree-sitter-generate = { version = "0.25.1", optional = true }
+cc = { version = "1", optional = true }
+
+[dev-dependencies]
+insta = "1.39"

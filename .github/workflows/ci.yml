@@ -1,0 +1,51 @@
+name: Rust Sitter CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Build
+      run: cargo build
+    - name: Run tests
+      run: cargo test
+    - name: Run macro tests
+      run: cargo test -p rust-sitter-macro -- tests
+  test-wasm:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Install wasm32 target
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        target: wasm32-unknown-unknown
+
+    - name: Get wasm-bindgen version
+      id: wasm-bindgen-version
+      run: echo "VERSION=$(cargo pkgid wasm-bindgen-shared | cut -d '@' -f2)" >> "$GITHUB_OUTPUT"
+    - name: Install WebAssembly test runner
+      run: cargo install wasm-bindgen-cli@${{ steps.wasm-bindgen-version.outputs.VERSION }}
+
+    - name: Run tests
+      env:
+        CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_RUNNER: wasm-bindgen-test-runner
+      run: cargo test -p rust-sitter-example --target wasm32-unknown-unknown --no-fail-fast
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Check rustfmt
+      run: cargo fmt --all -- --check
+    - name: Check clippy
+      run: cargo clippy --all-targets -- -D warnings

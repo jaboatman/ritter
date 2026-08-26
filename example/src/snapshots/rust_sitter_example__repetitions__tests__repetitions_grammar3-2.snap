@@ -1,0 +1,26 @@
+---
+source: example/src/repetitions.rs
+expression: "grammar3::parse(\"1,\")"
+---
+Ok(
+    NumberList {
+        numbers: Spanned {
+            value: [
+                Spanned {
+                    value: Some(
+                        1,
+                    ),
+                    span: (
+                        0,
+                        1,
+                    ),
+                },
+            ],
+            span: (
+                0,
+                2,
+            ),
+        },
+        metadata: 123,
+    },
+)
