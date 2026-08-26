@@ -268,4 +268,4 @@ pub struct CommaSeparatedExprs {
 Boxes are automatically constructed around the inner type when parsing, but ritter doesn't do anything extra beyond that.
 
 ## Credits
-Special thanks to [ritter](https://github.com/hydro-project/ritter). This project began as a fork of `ritter`, and has since heavily diverged to introduce many new features.
+Special thanks to [rust-sitter](https://github.com/hydro-project/rust-sitter). This project began as a fork of `rust-sitter`, and has since heavily diverged.
