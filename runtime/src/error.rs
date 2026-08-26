@@ -302,6 +302,9 @@ struct ExtractErrorInner<'a> {
     position: crate::Position,
     field_name: &'static str,
     struct_name: &'static str,
+    // NOTE: We may use this at some point, but for now we will just leave it here instead of
+    // stripping it out, which will change the lifetime parameter.
+    #[expect(dead_code)]
     node: Option<tree_sitter::Node<'a>>,
     reason: ExtractErrorReason,
 }
