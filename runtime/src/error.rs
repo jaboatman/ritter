@@ -283,9 +283,10 @@ impl Iterator for ErrorLookahead {
             // to no longer be static, however, the string is always static - it is statically built
             // into the binary during the code generation phase. So we can safely cast away the
             // lifetime here.
-            let name = self.it.current_symbol_name()?;
-            let name: &'static str = unsafe { std::mem::transmute(name) };
-            return Some(name);
+            // let name = self.it.current_symbol_name()?;
+            // let name: &'static str = unsafe { std::mem::transmute(name) };
+            // return Some(name);
+            return Some(self.it.current_symbol_name());
         }
     }
 }

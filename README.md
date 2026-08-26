@@ -10,10 +10,10 @@ Ritter makes it easy to create efficient parsers in Rust by leveraging the [tree
 First, add `ritter` to your `Cargo.toml`:
 ```toml
 [dependencies]
-ritter = { git = "https://github.com/jaboatman/ritter", branch = "latest" }
+ritter = "0.1.0-pre.1"
 
 [build-dependencies]
-ritter-tool = { git = "https://github.com/jaboatman/ritter", branch = "latest" }
+ritter-tool = "0.1.0-pre.1"
 ```
 
 The first step is to configure your `build.rs` to compile and link the generated tree-sitter parser:

@@ -1,5 +1,5 @@
 // TODO: Switch on which version we are using specifically.
-const GENERATED_SEMANTIC_VERSION: Option<(u8, u8, u8)> = Some((0, 27, 0));
+const GENERATED_SEMANTIC_VERSION: Option<(u8, u8, u8)> = Some((0, 26, 0));
 
 use std::io::Write;
 use std::path::{Path, PathBuf};
@@ -52,12 +52,13 @@ fn generate_parser_tree_sitter(
     grammar_string: &str,
 ) -> tree_sitter_generate::GenerateResult<(String, String)> {
     // TODO: Do something with these diagnostics
-    let mut diagnostics = vec![];
+    // let mut diagnostics = vec![];
     generate_parser_for_grammar(
         grammar_string,
         GENERATED_SEMANTIC_VERSION,
-        tree_sitter_generate::OptLevel::empty(),
-        &mut diagnostics,
+        // Not released yet.
+        // tree_sitter_generate::OptLevel::empty(),
+        // &mut diagnostics,
     )
 }
 
