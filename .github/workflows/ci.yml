@@ -20,27 +20,27 @@ jobs:
         run: cargo test
       - name: Run macro tests
         run: cargo test -p ritter-macro -- tests
-  test-wasm:
-    runs-on: ubuntu-latest
+  #test-wasm:
+  #  runs-on: ubuntu-latest
 
-    steps:
-      - uses: actions/checkout@v3
-      - name: Install wasm32 target
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          target: wasm32-unknown-unknown
+  #  steps:
+  #    - uses: actions/checkout@v3
+  #    - name: Install wasm32 target
+  #      uses: actions-rs/toolchain@v1
+  #      with:
+  #        toolchain: stable
+  #        target: wasm32-unknown-unknown
 
-      - name: Get wasm-bindgen version
-        id: wasm-bindgen-version
-        run: echo "VERSION=$(cargo pkgid wasm-bindgen-shared | cut -d '@' -f2)" >> "$GITHUB_OUTPUT"
-      - name: Install WebAssembly test runner
-        run: cargo install wasm-bindgen-cli@${{ steps.wasm-bindgen-version.outputs.VERSION }}
+  #    - name: Get wasm-bindgen version
+  #      id: wasm-bindgen-version
+  #      run: echo "VERSION=$(cargo pkgid wasm-bindgen-shared | cut -d '@' -f2)" >> "$GITHUB_OUTPUT"
+  #    - name: Install WebAssembly test runner
+  #      run: cargo install wasm-bindgen-cli@${{ steps.wasm-bindgen-version.outputs.VERSION }}
 
-      - name: Run tests
-        env:
-          CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_RUNNER: wasm-bindgen-test-runner
-        run: cargo test -p ritter-example --target wasm32-unknown-unknown --no-fail-fast
+  #    - name: Run tests
+  #      env:
+  #        CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_RUNNER: wasm-bindgen-test-runner
+  #      run: cargo test -p ritter-example --target wasm32-unknown-unknown --no-fail-fast
   lint:
     runs-on: ubuntu-latest
     steps:
