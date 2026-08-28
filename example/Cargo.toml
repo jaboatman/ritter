@@ -2,17 +2,20 @@
 name = "ritter-example"
 version.workspace = true
 authors.workspace = true
-edition = "2021"
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+edition = "2024"
 publish = false
 
 [dependencies]
 env_logger = "0.11"
-ritter = { path = "../runtime" }
+ritter = { path = "../runtime", version = "0.1.0-pre.1" }
 codemap = "0.1.3"
 codemap-diagnostic = "0.1.1"
 
 [build-dependencies]
-ritter-tool = { path = "../tool" }
+ritter-tool = { path = "../tool", version = "0.1.0-pre.1" }
 
 [dev-dependencies]
 insta = "1.39"

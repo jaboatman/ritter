@@ -2,11 +2,12 @@
 name = "ritter-common"
 description = "Shared logic for the ritter macro and tool"
 readme = "../README.md"
-repository = "https://github.com/jaboatman/ritter"
 version.workspace = true
 authors.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
 edition = "2024"
-license = "MIT"
 keywords = ["parsing", "codegen"]
 categories = ["development-tools"]
 
@@ -14,7 +15,7 @@ categories = ["development-tools"]
 path = "src/lib.rs"
 
 [dependencies]
-ritter-types = { path = "../types" }
+ritter-types = { path = "../types", version = "0.1.0-pre.1" }
 syn = { version = "2", features = [ "full", "extra-traits" ] }
 proc-macro2 = "1"
 quote = "1"

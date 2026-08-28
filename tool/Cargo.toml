@@ -2,10 +2,11 @@
 name = "ritter-tool"
 description = "The external tool for ritter that extracts grammars from Rust definitions"
 readme = "../README.md"
-repository = "https://github.com/jaboatman/ritter"
 version.workspace = true
 authors.workspace = true
-license = "MIT"
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
 edition = "2024"
 keywords = ["parsing", "codegen"]
 categories = ["development-tools"]
@@ -15,7 +16,7 @@ syn = { version = "2", features = ["full", "extra-traits"] }
 syn-inline-mod = "0.6"
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", features = ["preserve_order"] }
-ritter-common = { path = "../common" }
+ritter-common = { path = "../common", version = "0.1.0-pre.1" }
 
 tempfile = "3"
 tree-sitter.workspace = true

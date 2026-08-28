@@ -1,8 +1,13 @@
 [package]
 name = "ritter-types"
 edition = "2024"
+readme = "../README.md"
 version.workspace = true
 authors.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
 
 [dependencies]
 serde = { version = "1", features = ["derive"] }
