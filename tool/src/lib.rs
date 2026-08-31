@@ -52,13 +52,12 @@ fn generate_parser_tree_sitter(
     grammar_string: &str,
 ) -> tree_sitter_generate::GenerateResult<(String, String)> {
     // TODO: Do something with these diagnostics
-    // let mut diagnostics = vec![];
+    let mut diagnostics = vec![];
     generate_parser_for_grammar(
         grammar_string,
         GENERATED_SEMANTIC_VERSION,
-        // Not released yet.
-        // tree_sitter_generate::OptLevel::empty(),
-        // &mut diagnostics,
+        tree_sitter_generate::OptLevel::empty(),
+        &mut diagnostics,
     )
 }
 

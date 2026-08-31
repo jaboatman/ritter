@@ -52,9 +52,6 @@ impl std::fmt::Display for ParseErrorReason {
         match self {
             ParseErrorReason::Missing(kind) => write!(f, "missing {kind}"),
             ParseErrorReason::Error => f.write_str("parse error"),
-            // ParseErrorReason::FailedExtract { field } => {
-            //     write!(f, "failed extraction of field: {field}")
-            // }
             ParseErrorReason::Extract {
                 struct_name,
                 field_name,
@@ -283,10 +280,9 @@ impl Iterator for ErrorLookahead {
             // to no longer be static, however, the string is always static - it is statically built
             // into the binary during the code generation phase. So we can safely cast away the
             // lifetime here.
-            // let name = self.it.current_symbol_name()?;
-            // let name: &'static str = unsafe { std::mem::transmute(name) };
-            // return Some(name);
-            return Some(self.it.current_symbol_name());
+            let name = self.it.current_symbol_name()?;
+            let name: &'static str = unsafe { std::mem::transmute(name) };
+            return Some(name);
         }
     }
 }
