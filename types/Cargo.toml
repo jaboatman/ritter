@@ -2,6 +2,7 @@
 name = "ritter-types"
 edition = "2024"
 readme = "../README.md"
+description = "Type definitions for ritter"
 version.workspace = true
 authors.workspace = true
 license.workspace = true
